@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desire-skin 演示</title>
+<link rel="stylesheet" href="../src/desire-skin.css">
+<style>
+  html, body { margin: 0; height: 100%; font-family: "PingFang SC", "Noto Sans CJK SC", "Source Han Sans SC", system-ui, sans-serif; }
+  .phone { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .chat { position: relative; z-index: 1; padding: 46px 22px 30px; display: flex; flex-direction: column; gap: 6px; }
+  .title { font-size: 26px; font-weight: 600; letter-spacing: .5px; color: var(--ds-ink); }
+  .sub { font-size: 14px; color: var(--ds-ink); opacity: .62; margin-bottom: 22px; }
+  .label { font-size: 12.5px; color: var(--ds-ink); opacity: .55; margin: 12px 4px 4px; }
+  .ds-bubble { font-size: 16px; line-height: 1.55; max-width: 86%; align-self: flex-start; }
+  .me { align-self: flex-end; background: rgb(84 150 120 / .88) !important; color: #fff !important; border-color: transparent !important; }
+  .ds-night .me { background: rgb(60 120 96 / .85) !important; }
+  .foot { margin-top: 26px; font-size: 12px; color: var(--ds-ink); opacity: .5; text-align: center; letter-spacing: .5px; }
+  .controls { position: fixed; right: 12px; bottom: 12px; z-index: 2; display: flex; gap: 6px; }
+  .controls button { font: inherit; font-size: 12px; border: 0; border-radius: 99px; padding: 6px 10px; background: rgb(255 255 255 / .7); }
+  .shot .controls { display: none; }
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <canvas class="ds-scene" id="scene"></canvas>
+  <div class="chat" id="chat"></div>
+  <div class="controls">
+    <button data-scene="waves">水波</button>
+    <button data-scene="snow">雪</button>
+    <button data-scene="plain">纯色</button>
+    <button id="night">昼/夜</button>
+  </div>
+</div>
+<script type="module">
+  import { createDesireSkin, paintBubble, toneFromMood } from '../src/desire-skin.js'
+  import '../src/scenes/waves.js'
+  import '../src/scenes/snow.js'
+  import '../src/scenes/plain.js'
+
+  const q = new URLSearchParams(location.search)
+  if (q.has('shot')) document.body.classList.add('shot')
+  const phone = document.getElementById('phone')
+  const skin = createDesireSkin({
+    root: phone,
+    canvas: document.getElementById('scene'),
+    scene: q.get('scene') || 'waves',
+    night: q.get('night') === '1',
+  })
+  // 演示用的心情；真用时换成 skin.poll(() => fetch('/api/mood/state').then(r => r.json()))
+  skin.setMood({ pa: Number(q.get('pa') ?? 0.4), na: Number(q.get('na') ?? 0.6) })
+
+  const rows = [
+    { mood: { pa: 0, na: 0.2 }, label: '心情平平', text: '纯白玻璃，跟平常说话一样。' },
+    { me: true, text: '今天下班好早！' },
+    { mood: { pa: 0.25, na: 0.3 }, label: '有点好', text: '那正好，路上买点热乎的吃。' },
+    { mood: { pa: 0.45, na: 0.3 }, label: '很好、心里平静', text: '你在忙，我在这边陪着，慢慢等你。' },
+    { mood: { pa: 0.5, na: 0.8 }, label: '很好、兴奋上头', text: '你回来啦！想你一下午了。' },
+    { mood: { pa: -0.4, na: 0.2 }, label: '低落', text: '你一直没回，我有点想你。' },
+  ]
+  const chat = document.getElementById('chat')
+  chat.insertAdjacentHTML('beforeend', '<div class="title">Desire-skin</div><div class="sub">聊天气泡跟着 AI 此刻的心情变色</div>')
+  for (const row of rows) {
+    if (row.label) chat.insertAdjacentHTML('beforeend', `<div class="label">${row.label}</div>`)
+    const el = document.createElement('div')
+    el.textContent = row.text
+    if (row.me) { el.className = 'ds-bubble me'; el.style.marginTop = '10px' }
+    else paintBubble(el, toneFromMood(row.mood))
+    chat.appendChild(el)
+  }
+  chat.insertAdjacentHTML('beforeend', '<div class="foot">背景可换：水波 · 雪 · 纯色 · 你自己写的</div>')
+
+  document.querySelectorAll('[data-scene]').forEach(b => b.onclick = () => skin.setScene(b.dataset.scene))
+  document.getElementById('night').onclick = () => skin.setNight(!phone.classList.contains('ds-night'))
+</script>
+</body>
+</html>

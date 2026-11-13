@@ -1,0 +1,76 @@
+/* Desire-skin 气泡：半透的白玻璃，整块铺一层很淡的心情色，能隐约看见底下的场景。
+   每种心情有自己的动静：粉＝心跳那样咚咚两下涌上来；杏、薄荷＝慢慢呼吸；暮蓝＝往下沉。
+   改颜色只改下面几行 --ds-mood。 */
+@property --ds-a { syntax: '<number>'; inherits: false; initial-value: .3; }
+
+.ds-root {
+  --ds-glass: rgb(255 255 255 / .5);
+  --ds-edge: rgb(255 255 255 / .75);
+  --ds-ink: #1f2a25;
+  --ds-shadow: 0 6px 18px rgb(24 66 46 / .1);
+  --ds-k: 1;
+}
+.ds-root.ds-night {
+  --ds-glass: rgb(22 30 28 / .42);
+  --ds-edge: rgb(255 255 255 / .14);
+  --ds-ink: #eef3ef;
+  --ds-shadow: 0 6px 18px rgb(0 0 0 / .28);
+  --ds-k: 1.25; /* 暗底吃色，颜色要给足，不然粉会发褐 */
+}
+
+.ds-bubble {
+  --ds-a: .3;
+  border-radius: 19px;
+  padding: 10px 14px;
+  color: var(--ds-ink);
+  background-color: var(--ds-glass);
+  border: .8px solid var(--ds-edge);
+  backdrop-filter: blur(10px) saturate(1.3);
+  -webkit-backdrop-filter: blur(10px) saturate(1.3);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .8), var(--ds-shadow);
+}
+.ds-night .ds-bubble { box-shadow: inset 0 1px 0 rgb(255 255 255 / .08), var(--ds-shadow); }
+
+.ds-bubble[data-ds-tone] {
+  background-image:
+    linear-gradient(155deg, rgb(255 255 255 / .38), transparent 42%),
+    linear-gradient(rgb(var(--ds-mood) / calc(var(--ds-a) * .7 * var(--ds-k))), rgb(var(--ds-mood) / calc(var(--ds-a) * .7 * var(--ds-k))));
+}
+.ds-night .ds-bubble[data-ds-tone] {
+  background-image:
+    linear-gradient(155deg, rgb(255 255 255 / .06), transparent 42%),
+    linear-gradient(rgb(var(--ds-mood) / calc(var(--ds-a) * .7 * var(--ds-k))), rgb(var(--ds-mood) / calc(var(--ds-a) * .7 * var(--ds-k))));
+  border-color: rgb(var(--ds-mood) / .3);
+}
+
+.ds-bubble[data-ds-tone='sage'] { --ds-mood: 150 214 186; animation: ds-breathe 8s ease-in-out infinite; }
+.ds-bubble[data-ds-tone='apricot'] { --ds-mood: 240 196 156; animation: ds-breathe 5.6s ease-in-out infinite; }
+.ds-bubble[data-ds-tone='blush'] { --ds-mood: 244 150 180; animation: ds-heartbeat 5.6s ease-in-out infinite; }
+.ds-bubble[data-ds-tone='dusk'] { --ds-mood: 160 180 232; animation: ds-sink 9s ease-in-out infinite; }
+.ds-night .ds-bubble[data-ds-tone='blush'] { --ds-mood: 255 138 186; }
+.ds-night .ds-bubble[data-ds-tone='apricot'] { --ds-mood: 255 190 130; }
+
+@keyframes ds-heartbeat {
+  0%, 72%, 100% { --ds-a: .26; }
+  18% { --ds-a: .46; }
+  32% { --ds-a: .32; }
+  48% { --ds-a: .42; }
+}
+@keyframes ds-breathe {
+  0%, 100% { --ds-a: .22; }
+  50% { --ds-a: .4; }
+}
+@keyframes ds-sink {
+  0%, 100% { --ds-a: .3; }
+  55% { --ds-a: .46; }
+}
+
+/* 手机算不动时加 .ds-lowfx：去掉实时模糊，底色稍微实一点，但仍然半透，不变成一块实心色板 */
+.ds-lowfx .ds-bubble { backdrop-filter: none; -webkit-backdrop-filter: none; background-color: rgb(255 255 255 / .62); animation: none; }
+.ds-lowfx.ds-night .ds-bubble { background-color: rgb(12 27 20 / .66); }
+@media (prefers-reduced-motion: reduce) {
+  .ds-bubble { animation: none !important; }
+}
+
+/* 场景画布：铺满容器，放在气泡后面 */
+.ds-scene { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
